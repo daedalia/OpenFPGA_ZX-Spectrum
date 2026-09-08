@@ -400,7 +400,7 @@ void encode_status() {
 	status_bits[35]=(menuListVals[0x02] >>1) & 0x01;
 	status_bits[36]=menuListVals[0x00] & 0x01;		//keyboard 36-37
 	status_bits[37]=(menuListVals[0x00] >>1) & 0x01;
-	//status_bits[38]=(menuType[1] [3]>>24) & 0x01;	//narrow border 38
+	status_bits[38]=1;	//narrow border 38 - menu item disabled, default to Yes
 	status_bits[39]=menuListVals[0x0a] & 0x01;		//PSG/FM 39
 	status_bits[40]=menuListVals[0x0b] & 0x01;		//PSG Stereo 40
 	status_bits[41]=menuListVals[0x0c] & 0x01;		//PSG Model 41
@@ -1695,11 +1695,11 @@ int main(void)
 	set_initial_keyval(2,IO_JOYK_2_0,12,1,1);	// O (LEFT)
 	set_initial_keyval(3,IO_JOYK_3_0,13,1,1);	// P (RIGHT)
 	set_initial_keyval(4,IO_JOYK_4_0,5,4,5);	// SPACE (A)
-	set_initial_keyval(5,IO_JOYK_5_0,13,2,2);	// ENTER (B)
-	set_initial_keyval(6,IO_JOYK_6_0,11,0,1);	// 0 (X)
-	set_initial_keyval(7,IO_JOYK_7_0,0,4,1);	// Sym Shift (Y)
-	set_initial_keyval(8,IO_JOYK_8_0,0,3,2);	// Cap Shift (L)
-	set_initial_keyval(9,IO_JOYK_9_0,11,1,1);	// I (R)
+	set_initial_keyval(5,IO_JOYK_5_0,11,0,1);	// 0 (B)
+	set_initial_keyval(6,IO_JOYK_6_0,13,2,2);	// ENTER (X)
+	set_initial_keyval(7,IO_JOYK_7_0,10,2,1);	// K (Y)
+	set_initial_keyval(8,IO_JOYK_8_0,11,3,1);	// UP (L)
+	set_initial_keyval(9,IO_JOYK_9_0,11,4,1);	// DOWN (R)
 		
 	
 	
