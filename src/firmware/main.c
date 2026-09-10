@@ -458,7 +458,7 @@ void decode_status() {
 	menuListVals[0x13]=status_bits[32] | (status_bits[33] <<1);		//mmc mode 32-33	
 	menuListVals[0x02]=status_bits[34] | (status_bits[35] <<1);		//mouse 34-35	
 	menuListVals[0x00]=status_bits[36] | (status_bits[37] <<1);		//keyboard 36-37	
-	//menuType[1] [3]=updateMenuType(menuType[1] [3],status_bits[38]);	//narrow border 38
+	menuType[1] [3]=updateMenuType(menuType[1] [3],status_bits[38]);	//narrow border 38
 	menuListVals[0x0a]=status_bits[39]; 							//PSG/FM 39
 	menuListVals[0x0b]=status_bits[40]; 							//PSG Stereo 40
 	menuListVals[0x0c]=status_bits[41]; 							//PSG Model 41
@@ -1697,9 +1697,9 @@ int main(void)
 	set_initial_keyval(4,IO_JOYK_4_0,5,4,5);	// SPACE (A)
 	set_initial_keyval(5,IO_JOYK_5_0,11,0,1);	// 0 (B)
 	set_initial_keyval(6,IO_JOYK_6_0,13,2,2);	// ENTER (X)
-	set_initial_keyval(7,IO_JOYK_7_0,10,2,1);	// K (Y)
-	set_initial_keyval(8,IO_JOYK_8_0,11,3,1);	// UP (L)
-	set_initial_keyval(9,IO_JOYK_9_0,11,4,1);	// DOWN (R)
+	set_initial_keyval(7,IO_JOYK_7_0,0,0,1);	// BREAK (Y)
+	set_initial_keyval(8,IO_JOYK_8_0,10,4,1);	// LEFT (L)
+	set_initial_keyval(9,IO_JOYK_9_0,12,4,1);	// RIGHT (R)
 		
 	
 	
