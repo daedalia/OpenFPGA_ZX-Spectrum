@@ -23,4 +23,4 @@ def reverse_bits_in_file(input_path, output_path):
 # Execute the conversion
 if __name__ == "__main__":
     # Change "output_file.rbf" to whatever your local Quartus output name is!
-    reverse_bits_in_file("../src/fpga/ap_core.rbf", "../dist/Cores/bitstream.rbf_r")
+    reverse_bits_in_file("../src/fpga/output_files/ap_core.rbf", "../dist/Cores/dave18.ZXSpectrum/bitstream.rbf_r")
