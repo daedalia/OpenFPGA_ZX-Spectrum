@@ -1591,6 +1591,28 @@ void readSector(unsigned int address, unsigned int size,unsigned int type) {
 	IOCTL_RW(COMPLETE_ACK)=1;
 }
 
+void writeSector(unsigned int address, unsigned int size, unsigned int type) {	
+	IOCTL_RW(COMPLETE_ACK) = 0;
+	IOCTL_RW(SET_SIZE) = size;
+    
+	if (address >= 0x80000) {
+		IOCTL_RW(SET_ADDR_L) = (address - 0x80000) * 0x200;
+		IOCTL_RW(SET_ADDR_U) = (address >> 23);
+	} else {
+		IOCTL_RW(SET_ADDR_L) = address * 0x200;
+		IOCTL_RW(SET_ADDR_U) = 0x0;
+	}
+    
+	IOCTL_RW(SET_ID) = type;
+	IOCTL_RW(UPLOAD) = 1; // 💡 Signal framework to write cache back to disk
+    
+	while (IOCTL_RW(COMPLETE_ACK) == 0) {	
+		// Wait until upload processing completes
+	}
+	IOCTL_RW(UPLOAD) = 0;	
+	IOCTL_RW(COMPLETE_ACK) = 1;
+}
+
 void mountDSK() {
 
 //	if ((dataslot_size_l<0x100) && (dataslot_size_u==0)) return;		//file too small
@@ -1620,7 +1642,7 @@ void mountVHD() {
 	IOCTL_RW(DISK_SIZE_LOW)=dataslot_size_l;
 	IOCTL_RW(DISK_SIZE_HIGH)=dataslot_size_u;
 	IOCTL_RW(VHD_MOUNTED)=((disk_rw<<1) & 2) + (imageVHDMounted & 1);
-	IOCTL_RW(VHD_MOUNTED)=0;		//Mount signal is just pulsed, not continually asserted
+	//IOCTL_RW(VHD_MOUNTED)=0;		//Mount signal is just pulsed, not continually asserted
 }
 
 
@@ -1698,8 +1720,8 @@ int main(void)
 	set_initial_keyval(5,IO_JOYK_5_0,1,0,1);	// EDIT (B)
 	set_initial_keyval(6,IO_JOYK_6_0,5,4,5);	// SPACE (X)
 	set_initial_keyval(7,IO_JOYK_7_0,0,0,1);	// BREAK (Y)
-	set_initial_keyval(8,IO_JOYK_8_0,10,4,1);	// LEFT (L)
-	set_initial_keyval(9,IO_JOYK_9_0,12,4,1);	// RIGHT (R)
+	set_initial_keyval(8,IO_JOYK_8_0,0,3,1);	// CAPS_SHIFT (L)
+	set_initial_keyval(9,IO_JOYK_9_0,4,2,1);	// S (R)
 		
 	
 	
@@ -1863,6 +1885,9 @@ int main(void)
 		}
 		if ((IOCTL_RW(DISK_BUFF_RD) & 2) && (imageVHDMounted)) {		//core has requested vhd sector
 			readSector(IOCTL_RW(VHD_BUFF_ADDR),IOCTL_RW(DISK_SIZE_LOW),3);
+		}
+		if ((IOCTL_RW(DISK_BUFF_WR) & 2) && (imageVHDMounted)) {
+			writeSector(IOCTL_RW(VHD_BUFF_ADDR), IOCTL_RW(DISK_SIZE_LOW), 3);
 		}
 
 		processInput();
