@@ -1631,19 +1631,20 @@ void mountDSK() {
 }
 
 void mountVHD() {
-
-//	if ((dataslot_size_l<0x100) && (dataslot_size_u==0)) return;		//file too small
-
-	imageVHDMounted=1;
-	disk_rw=1;
-	//disk_size=dataslot_size_l;
-	disk_type=dataslot_id;
+	imageVHDMounted = 1;
+	disk_rw = 1;
+	disk_type = dataslot_id;
 	
-	IOCTL_RW(DISK_SIZE_LOW)=dataslot_size_l;
-	IOCTL_RW(DISK_SIZE_HIGH)=dataslot_size_u;
-	IOCTL_RW(VHD_MOUNTED)=((disk_rw<<1) & 2) + (imageVHDMounted & 1);
-	//IOCTL_RW(VHD_MOUNTED)=0;		//Mount signal is just pulsed, not continually asserted
+	IOCTL_RW(DISK_SIZE_LOW) = dataslot_size_l;
+	IOCTL_RW(DISK_SIZE_HIGH) = dataslot_size_u;
+	
+	IOCTL_RW(VHD_MOUNTED) = ((disk_rw << 1) & 2) + (imageVHDMounted & 1);
+	
+	for(volatile int delay = 0; delay < 10; delay++);
+
+	IOCTL_RW(VHD_MOUNTED) = ((disk_rw << 1) & 2);
 }
+
 
 
 void set_initial_keyval (unsigned int id, unsigned int addr,unsigned int x,unsigned int y,unsigned int w) {
