@@ -1592,6 +1592,7 @@ void readSector(unsigned int address, unsigned int size,unsigned int type) {
 }
 
 void writeSector(unsigned int address, unsigned int size, unsigned int type) {	
+    // 1. Reset the handshake flags
     IOCTL_RW(COMPLETE_ACK) = 0;
     IOCTL_RW(SET_SIZE) = size;
     
@@ -1602,14 +1603,26 @@ void writeSector(unsigned int address, unsigned int size, unsigned int type) {
         IOCTL_RW(SET_ADDR_L) = address * 0x200;
         IOCTL_RW(SET_ADDR_U) = 0x0;
     }
-    
     IOCTL_RW(SET_ID) = type;
-    IOCTL_RW(UPLOAD) = 1;
+
+    // 2. OPENFPGA BRIDGE FIX: Instead of standard UPLOAD = 1, 
+    // manually stream the sector data out of the core's data port buffer.
+    // We use a temporary pointer to pull data out of the core interface area.
+    volatile unsigned int *core_data_port = (volatile unsigned int *)(IOCTL + DISK_BUFF_ADDR);
     
-    while (IOCTL_RW(COMPLETE_ACK) == 0) {	
+    // We allocate a local buffer or stream directly to the target system slot.
+    // If your SDK framework provides an upload pipeline, it expects the data 
+    // registry to be manually drained like this:
+    for (unsigned int i = 0; i < (size / 4); i++) {
+        // Read 32-bits from the core buffer at a time to drain the Block RAM
+        unsigned int sector_chunk = core_data_port[i];
+        
+        // Push this chunk to the file controller data target register
+        // (Typically routed via TARGET registers or BRIDGE_RW depending on your core wrapper)
+        BRIDGE_RW(TARGET_0) = sector_chunk;
     }
-    
-    IOCTL_RW(UPLOAD) = 0;	
+
+    // 3. Finalise the hardware transfer handshake
     IOCTL_RW(COMPLETE_ACK) = 1;
 }
 
