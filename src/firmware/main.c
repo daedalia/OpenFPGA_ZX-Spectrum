@@ -669,7 +669,7 @@ void initMenus() {
 	strcpyr(&menuLists[0x11] [0] [0],"  ULA-48");
 	strcpyr(&menuLists[0x11] [1] [0]," ULA-128");
 	strcpyr(&menuLists[0x11] [2] [0],"Pentagon");
-	menuListVals[0x11]=0;
+	menuListVals[0x11]=1;
 	
 	menuType[2] [6] = 0x12050227;
 	strcpyr(&menuLists[0x12] [0] [0],"Spectrum 128K/+2");
@@ -677,7 +677,7 @@ void initMenus() {
 	strcpyr(&menuLists[0x12] [2] [0],"     Profi 1024K");
 	strcpyr(&menuLists[0x12] [3] [0],"    Spectrum 48K");
 	strcpyr(&menuLists[0x12] [4] [0]," Spectrum +2A/+3");
-	menuListVals[0x12]=0;
+	menuListVals[0x12]=1;
 	
 	menuType[2] [7] = 0x13010228;
 	strcpyr(&menuLists[0x13] [0] [0],"   Auto (VHD)");
@@ -1592,25 +1592,25 @@ void readSector(unsigned int address, unsigned int size,unsigned int type) {
 }
 
 void writeSector(unsigned int address, unsigned int size, unsigned int type) {	
-	IOCTL_RW(COMPLETE_ACK) = 0;
-	IOCTL_RW(SET_SIZE) = size;
+    IOCTL_RW(COMPLETE_ACK) = 0;
+    IOCTL_RW(SET_SIZE) = size;
     
-	if (address >= 0x80000) {
-		IOCTL_RW(SET_ADDR_L) = (address - 0x80000) * 0x200;
-		IOCTL_RW(SET_ADDR_U) = (address >> 23);
-	} else {
-		IOCTL_RW(SET_ADDR_L) = address * 0x200;
-		IOCTL_RW(SET_ADDR_U) = 0x0;
-	}
+    if (address >= 0x80000) {
+        IOCTL_RW(SET_ADDR_L) = (address - 0x80000) * 0x200;
+        IOCTL_RW(SET_ADDR_U) = (address >> 23);
+    } else {
+        IOCTL_RW(SET_ADDR_L) = address * 0x200;
+        IOCTL_RW(SET_ADDR_U) = 0x0;
+    }
     
-	IOCTL_RW(SET_ID) = type;
-	IOCTL_RW(UPLOAD) = 1; // 💡 Signal framework to write cache back to disk
+    IOCTL_RW(SET_ID) = type;
+    IOCTL_RW(UPLOAD) = 1;
     
-	while (IOCTL_RW(COMPLETE_ACK) == 0) {	
-		// Wait until upload processing completes
-	}
-	IOCTL_RW(UPLOAD) = 0;	
-	IOCTL_RW(COMPLETE_ACK) = 1;
+    while (IOCTL_RW(COMPLETE_ACK) == 0) {	
+    }
+    
+    IOCTL_RW(UPLOAD) = 0;	
+    IOCTL_RW(COMPLETE_ACK) = 1;
 }
 
 void mountDSK() {
@@ -1884,12 +1884,16 @@ int main(void)
 		if ((IOCTL_RW(DISK_BUFF_RD) & 1) && (imageDSKMounted)) {		//core has requested disk sector
 			readSector(IOCTL_RW(DISK_BUFF_ADDR),IOCTL_RW(DISK_SIZE_LOW),1);
 		}
-		if ((IOCTL_RW(DISK_BUFF_RD) & 2) && (imageVHDMounted)) {		//core has requested vhd sector
-			readSector(IOCTL_RW(VHD_BUFF_ADDR),IOCTL_RW(DISK_SIZE_LOW),3);
-		}
-		if ((IOCTL_RW(DISK_BUFF_WR) & 2) && (imageVHDMounted)) {
-			writeSector(IOCTL_RW(VHD_BUFF_ADDR), IOCTL_RW(DISK_SIZE_LOW), 3);
-		}
+
+        if ((IOCTL_RW(DISK_BUFF_RD) & 2) && (imageVHDMounted)) {
+            readSector(IOCTL_RW(VHD_BUFF_ADDR), IOCTL_RW(DISK_SIZE_LOW), 3);
+        }
+        
+        if ((IOCTL_RW(DISK_BUFF_WR) & 2) && (imageVHDMounted)) {
+            writeSector(IOCTL_RW(VHD_BUFF_ADDR), IOCTL_RW(DISK_SIZE_LOW), 3);
+            // ⚠️ CRITICAL: Clear the VHD write request register to unfreeze the Z80 execution thread
+            IOCTL_RW(DISK_BUFF_WR) = 0; 
+        }
 
 		processInput();
 		
